@@ -50,6 +50,8 @@ NSString * const ID = @"cycleCell";
 @property (nonatomic, strong) UIImageView *backgroundImageView; // 当imageURLs为空时的背景图
 
 @property (assign, nonatomic) CGFloat contentOffsetX;  // collectionView偏移量
+@property (assign, nonatomic) int dragDirection;  // 拖动方向 0未拖动 1左 2右
+@property (assign, nonatomic) BOOL isDragging;  // 是否处于被拖动状态
 
 @end
 
@@ -334,7 +336,7 @@ NSString * const ID = @"cycleCell";
         for (int i = 0; i < _titlesGroup.count; i++) {
             [temp addObject:@""];
         }
-//        self.backgroundColor = [UIColor clearColor];
+        self.backgroundColor = [UIColor clearColor];
         self.imageURLStringsGroup = [temp copy];
     }
 }
@@ -440,7 +442,17 @@ NSString * const ID = @"cycleCell";
     
     int index = 0;
     if (_flowLayout.scrollDirection == UICollectionViewScrollDirectionHorizontal) {
-        index = (_mainView.contentOffset.x + _flowLayout.itemSize.width * 0.5) / _flowLayout.itemSize.width;
+        float interval;
+        
+        if (self.dragDirection == 0) {
+            interval = _flowLayout.itemSize.width * 0.5;
+        } else if (self.dragDirection == 1) {
+            interval = _flowLayout.itemSize.width * 0.8;
+        } else {
+            interval = _flowLayout.itemSize.width * 0.2;
+        }
+        
+        index = (_mainView.contentOffset.x + interval) / _flowLayout.itemSize.width;
     } else {
         index = (_mainView.contentOffset.y + _flowLayout.itemSize.height * 0.5) / _flowLayout.itemSize.height;
     }
@@ -660,6 +672,10 @@ NSString * const ID = @"cycleCell";
 
         if (self.mainView.contentOffset.x > self.contentOffsetX) {
             // 向左滚动
+            if (self.isDragging) {
+                self.dragDirection = 1;
+            }
+            
             if (self.flowLayout.itemSize.width * itemIndex < self.mainView.contentOffset.x + (Screen_Width - self.flowLayout.itemSize.width)/2) {
                 // 当前页图片缩小，下一页图片放大
                 nextCell.imageView.frame = CGRectMake(0, 0, MinWidth + scale * (MaxWidth - MinWidth), MinHeight + scale * (MaxHeight - MinHeight));
@@ -669,6 +685,10 @@ NSString * const ID = @"cycleCell";
             }
         } else {
             // 向右滚动
+            if (self.isDragging) {
+                self.dragDirection = 2;
+            }
+            
             if (self.flowLayout.itemSize.width * itemIndex < self.mainView.contentOffset.x + (Screen_Width - self.flowLayout.itemSize.width)/2) {
                 // 当前页图片放大，下一页图片缩小
                 nextCell.imageView.frame = CGRectMake(0, 0, MinWidth + scale * (MaxWidth - MinWidth), MinHeight + scale * (MaxHeight - MinHeight));
@@ -688,6 +708,8 @@ NSString * const ID = @"cycleCell";
 
 - (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
 {
+    self.isDragging = YES;
+    
     if (self.autoScroll) {
         [self invalidateTimer];
     }
@@ -725,6 +747,9 @@ NSString * const ID = @"cycleCell";
     } else if (self.itemDidScrollOperationBlock) {
         self.itemDidScrollOperationBlock(indexOnPageControl);
     }
+    
+    self.isDragging = NO;
+    self.dragDirection = 0;
 }
 
 
