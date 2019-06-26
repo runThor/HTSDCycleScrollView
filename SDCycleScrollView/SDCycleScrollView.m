@@ -39,6 +39,12 @@
 
 NSString * const ID = @"cycleCell";
 
+typedef NS_ENUM(NSInteger, DragDirection) {
+    DragDirectionNone,
+    DragDirectionLeft,
+    DragDirectionRight,
+};
+
 @interface SDCycleScrollView () <UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout>
 
 @property (nonatomic, weak) UICollectionViewFlowLayout *flowLayout;
@@ -50,7 +56,7 @@ NSString * const ID = @"cycleCell";
 @property (nonatomic, strong) UIImageView *backgroundImageView; // 当imageURLs为空时的背景图
 
 @property (assign, nonatomic) CGFloat contentOffsetX;  // collectionView偏移量
-@property (assign, nonatomic) int dragDirection;  // 拖动方向 0未拖动 1左 2右
+@property (assign, nonatomic) DragDirection dragDirection;  // 拖动方向
 @property (assign, nonatomic) BOOL isDragging;  // 是否处于被拖动状态
 
 @end
@@ -431,6 +437,7 @@ NSString * const ID = @"cycleCell";
         }
         return;
     }
+    
     [_mainView scrollToItemAtIndexPath:[NSIndexPath indexPathForItem:targetIndex inSection:0] atScrollPosition:scrollPosition animated:YES];
 }
 
@@ -444,9 +451,9 @@ NSString * const ID = @"cycleCell";
     if (_flowLayout.scrollDirection == UICollectionViewScrollDirectionHorizontal) {
         float interval;
         
-        if (self.dragDirection == 0) {
+        if (self.dragDirection == DragDirectionNone) {
             interval = _flowLayout.itemSize.width * 0.5;
-        } else if (self.dragDirection == 1) {
+        } else if (self.dragDirection == DragDirectionLeft) {
             interval = _flowLayout.itemSize.width * 0.8;
         } else {
             interval = _flowLayout.itemSize.width * 0.2;
@@ -729,10 +736,10 @@ NSString * const ID = @"cycleCell";
     }
 }
 
-- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
-{
-    [self scrollViewDidEndScrollingAnimation:self.mainView];
-}
+//- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+//{
+//    [self scrollViewDidEndScrollingAnimation:self.mainView];
+//}
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
 {
@@ -749,7 +756,7 @@ NSString * const ID = @"cycleCell";
     }
     
     self.isDragging = NO;
-    self.dragDirection = 0;
+    self.dragDirection = DragDirectionNone;
 }
 
 
